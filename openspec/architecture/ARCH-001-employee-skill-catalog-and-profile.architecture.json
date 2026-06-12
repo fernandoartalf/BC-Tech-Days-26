@@ -1,0 +1,28 @@
+{
+  "artifactType": "ARCHITECTURE",
+  "id": "ARCH-001",
+  "language": "en",
+  "frontmatter": {
+    "id": "ARCH-001",
+    "title": "Architecture — Employee Skill Catalog and Skill Profile Management",
+    "version": "1.0",
+    "spec": "SPEC-001",
+    "user_story": "US-001",
+    "ccn": "",
+    "status": "draft",
+    "created_date": "2026-06-10",
+    "author": "AL Architect",
+    "prepared_by": "Fernando Artigas Alfonso"
+  },
+  "sections": {
+    "Context": "Business context, technical context (BC v22 / runtime 15.2), and scope boundaries (in scope: 6 AL objects across 3 tables, 2 enums, 5 pages, 1 codeunit, 1 page extension, 2 permission sets; out of scope: US-002 goals, correction mechanism, telemetry).",
+    "ArchitecturalDrivers": "6 drivers: D-1 immutability, D-2 on-demand effective-dated calculation, D-3 confirmation workflow, D-4 deletion guard, D-5 ConfirmAssessment bypass, D-6 extension-only BC compliance.",
+    "ArchitecturalStyleAndKeyDecisions": "Master-data / append-only ledger pattern. 5 ADRs: ADR-1 append-only ledger, ADR-2 on-demand proficiency calculation, ADR-3 ModifyAll bypass, ADR-4 inline editable ListPart, ADR-5 permission-set role distinction.",
+    "LogicalComponentView": "ASCII component diagram: Employee Card extended by PageExtension 51100; Pages 51103/51104 surface skills; Codeunit 51100 holds all logic; Tables 51100-51102 provide storage; Employee (5200) is a standard unchanged FK target.",
+    "KeyRuntimeFlows": "5 flows: HR adds assessment (Confirmed), employee self-service adds pending, manager confirms pending (ModifyAll bypass), GetCurrentProficiency lookup, skill deletion guard.",
+    "DataArchitecture": "erDiagram: SkillCategory 1:N Skill, Skill 1:N EmployeeSkillAssessment, Employee 1:N EmployeeSkillAssessment. Surrogate PK on Table 51102. Secondary key (Employee No., Skill Code, Effective Date) for GetCurrentProficiency.",
+    "CrossCuttingConcerns": "Security: ESM BASIC/FULL permission sets. Reliability: unconditional trigger errors, user-facing error messages. Performance: SetCurrentKey + SetLoadFields in GetCurrentProficiency. Observability: out of scope v1. Localisation: Caption + ToolTip on all objects. RapidStart: Tables 51100/51101 portable. Upgrade: no migration needed for v1.",
+    "CoexistenceWithLegacyHRModule": "Employee Card (5200) extended via PageExtension only — one FactBox, one action, no field or trigger changes. Employee (5200) referenced as FK only.",
+    "ConstraintsAndKnownLimitations": "C-1 ModifyAll bypass documentation obligation. C-2 fixed enum scale. C-3 no correction mechanism. C-4 performance at scale. C-5 ConfirmAssessment missing runtime permission guard. C-6 orphan rows on Employee deletion. C-7 concurrent confirmation race condition."
+  }
+}

@@ -1,0 +1,48 @@
+name: "SharePoint Document Sync"
+description: "Sync files from a repository folder to a SharePoint Online document library using OIDC authentication and Microsoft Graph."
+author: "AL-Copilot-Skills-Collection"
+
+inputs:
+  config-path:
+    description: "Path to the sharepoint-sync.yml configuration file (relative to repo root)."
+    required: false
+    default: ".github/sharepoint-sync.yml"
+  base-sha:
+    description: "Base commit SHA for git-diff delta detection. Usually the merge base of the PR."
+    required: false
+  head-sha:
+    description: "Head commit SHA for git-diff delta detection. Usually the merge commit."
+    required: false
+  python-version:
+    description: "Python version to use."
+    required: false
+    default: "3.12"
+
+outputs:
+  sync-summary:
+    description: "Human-readable summary of the sync operation."
+    value: ${{ steps.sync.outputs.sync-summary }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        pip install --quiet --no-cache-dir \
+          -r "${{ github.action_path }}/requirements.txt"
+
+    - name: Run SharePoint sync
+      id: sync
+      shell: bash
+      env:
+        SYNC_CONFIG_PATH: ${{ inputs.config-path }}
+        BASE_SHA: ${{ inputs.base-sha }}
+        HEAD_SHA: ${{ inputs.head-sha }}
+        PYTHONPATH: ${{ github.action_path }}
+      run: python "${{ github.action_path }}/sync.py"
