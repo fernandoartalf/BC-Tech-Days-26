@@ -1,0 +1,31 @@
+# SharePoint Document Sync — Repository Configuration
+# See: specs/sharepoint-document-sync-action.md
+
+# Folder in the repository to sync to SharePoint
+source_folder: "docs"
+
+# SENSITIVE INFORMATION: SharePoint Online site URL — reveals internal tenant/site name.
+# Replace with your own site. Do NOT commit production URLs to public repositories.
+sharepoint_site: "phoenixdevelopments.sharepoint.com:/sites/BCTechDays2026"
+
+# SENSITIVE INFORMATION: Target folder path — reveals internal document library structure.
+# Path is relative to the drive root (the "Documents" library). Do NOT include
+# "Shared Documents" — the default drive already points to that library.
+sharepoint_folder: "/BC-Tech-Days-26"
+
+# Whether to delete files from SharePoint that no longer exist in the source folder
+# false = additive-only sync (never deletes from SharePoint)
+delete_orphaned: false
+
+# Delta detection mode:
+#   "auto"     — uses git-diff when SHAs are available, falls back to full scan
+#   "git-diff" — only sync files changed between base and head commits (fast)
+#   "full"     — scan and upload all matching files every time (reliable)
+sync_mode: "auto"
+
+# Optional: only sync files matching these glob patterns
+# If omitted, all files in source_folder are synced
+# file_patterns:
+#   - "**/*.md"
+#   - "**/*.pdf"
+#   - "**/*.docx"

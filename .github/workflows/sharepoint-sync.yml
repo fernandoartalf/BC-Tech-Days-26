@@ -1,0 +1,64 @@
+name: SharePoint Document Sync
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      sync_mode:
+        description: "Sync mode override (full = upload all files, auto = git-diff)"
+        required: false
+        default: "full"
+        type: choice
+        options:
+          - full
+          - auto
+
+permissions:
+  id-token: write   # Required for OIDC token exchange
+  contents: read    # Required to read repo files
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  sync:
+    name: Sync documents to SharePoint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for git-diff delta detection
+
+      - name: Determine merge base
+        id: merge-base
+        run: |
+          # If manually triggered with "full" mode, skip SHA detection
+          if [ "${{ github.event.inputs.sync_mode }}" = "full" ]; then
+            echo "base-sha=" >> "$GITHUB_OUTPUT"
+            echo "head-sha=" >> "$GITHUB_OUTPUT"
+          else
+            BASE_SHA=$(git rev-parse HEAD~1 2>/dev/null || echo "")
+            HEAD_SHA=$(git rev-parse HEAD)
+            echo "base-sha=${BASE_SHA}" >> "$GITHUB_OUTPUT"
+            echo "head-sha=${HEAD_SHA}" >> "$GITHUB_OUTPUT"
+          fi
+
+      # SENSITIVE INFORMATION: AZURE_CLIENT_ID and AZURE_TENANT_ID are stored as
+      # GitHub Encrypted Secrets. They are UUIDs (not credentials), but reveal
+      # infrastructure identity. Never hardcode them — always reference via secrets.
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}   # SENSITIVE INFORMATION: App Registration Client ID
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}   # SENSITIVE INFORMATION: Entra ID Tenant ID
+          allow-no-subscriptions: true
+
+      - name: Sync to SharePoint
+        uses: ./actions/sharepoint-sync
+        with:
+          config-path: .github/sharepoint-sync.yml
+          base-sha: ${{ steps.merge-base.outputs.base-sha }}
+          head-sha: ${{ steps.merge-base.outputs.head-sha }}

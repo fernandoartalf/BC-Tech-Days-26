@@ -22,7 +22,7 @@ rad.json
 #Test results file
 TestResults.xml
 #Github
-.github/
+#.github/
 #Claude
 .claude/
 #al Test Runner
